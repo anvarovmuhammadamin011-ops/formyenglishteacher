@@ -12,3 +12,6 @@ coverage/
 .vite/
 cookies.txt
 stu.txt
+
+.vercel
+.env*
