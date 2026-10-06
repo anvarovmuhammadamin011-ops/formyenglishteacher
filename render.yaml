@@ -1,0 +1,42 @@
+# Render Blueprint — ELMS backend (Express + PostgreSQL).
+#
+# From the Render dashboard:  New -> Blueprint  ->  pick this repo (main branch).
+# It provisions a free Postgres and a free web service with everything wired.
+# The server auto-runs `prisma db push` and seeds demo data on first boot.
+
+services:
+  - type: web
+    name: elms-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: npm run db:generate -w server && npm run build -w server
+    startCommand: npm run start:prod -w server
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: CLIENT_ORIGIN
+        value: https://formyenglishteacher.vercel.app
+      - key: JWT_ACCESS_SECRET
+        value: 8df93918a81408540f79f7299a0366e3e1d41683e5bbf0b160b1d5cc73acf9d9
+      - key: JWT_REFRESH_SECRET
+        value: 3d646ad141be5b14e092e14fb284d1f6134277d5be09cdda8a501e6ffe0a3b7e
+      - key: DATABASE_URL
+        fromDatabase:
+          name: elms-db
+          property: connectionString
+
+  - type: postgres
+    name: elms-db
+    plan: free
+    region: frankfurt
+    database: elms
+    user: elms
+    version: 16
