@@ -94,6 +94,7 @@ async function main() {
     const seed = spawnSync("npm", ["run", "db:seed", "-w", "server"], {
       cwd: repoRoot,
       stdio: "inherit",
+      shell: true,
       env: { ...process.env, FORCE_SEED: "1" },
     });
     if (seed.status !== 0) {
