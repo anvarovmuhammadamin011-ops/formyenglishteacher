@@ -1,7 +1,0 @@
-{
-  "success": false,
-  "error": {
-    "message": "API server is not connected in this deployment. Host the backend and set VITE_API_URL, or run locally with npm run dev.",
-    "code": "API_OFFLINE"
-  }
-}
