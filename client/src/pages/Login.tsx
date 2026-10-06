@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { GraduationCap, Loader2, Presentation, UserRound } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Card } from "@/components/ui";
+import { ApiError } from "@/lib/api";
 import { errorMessage } from "@/lib/utils";
 
 type Role = "TEACHER" | "STUDENT";
@@ -27,17 +28,23 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [active, setActive] = useState<Role | null>(null);
+  const [offline, setOffline] = useState<string | null>(null);
 
   async function enter(role: Role) {
     if (active) return;
     setActive(role);
+    setOffline(null);
     try {
       const acc = ACCOUNTS[role];
       const user = await login(acc.username, acc.password);
       toast.success(`Welcome, ${user.firstName}!`);
       navigate("/", { replace: true });
     } catch (err) {
-      toast.error(errorMessage(err));
+      if (err instanceof ApiError && err.code === "API_OFFLINE") {
+        setOffline(err.message);
+      } else {
+        toast.error(errorMessage(err));
+      }
       setActive(null);
     }
   }
@@ -82,6 +89,13 @@ export default function LoginPage() {
             <h2 className="text-lg font-bold text-ink-900">Enter ELMS</h2>
             <p className="mt-1 text-xs text-ink-500">Choose how you want to sign in.</p>
           </div>
+
+          {offline && (
+            <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">
+              <p className="font-semibold">Backend not connected</p>
+              <p className="mt-1 leading-relaxed">{offline}</p>
+            </div>
+          )}
 
           <div className="space-y-3">
             {(Object.keys(ACCOUNTS) as Role[]).map((role) => {
