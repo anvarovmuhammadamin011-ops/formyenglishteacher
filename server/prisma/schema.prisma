@@ -1,0 +1,639 @@
+// ELMS — English Learning Management System
+// PostgreSQL + Prisma schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ────────────────────────────── Enums ──────────────────────────────
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum GroupStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum Level {
+  BEGINNER
+  ELEMENTARY
+  PRE_INTERMEDIATE
+  INTERMEDIATE
+  UPPER_INTERMEDIATE
+  ADVANCED
+}
+
+enum TestType {
+  MANUAL
+  AI
+}
+
+enum TestStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  MULTIPLE_SELECT
+  FILL_BLANK
+  MATCHING
+  SHORT_ANSWER
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  TIME_UP
+  EXPIRED
+}
+
+enum Skill {
+  GRAMMAR
+  VOCABULARY
+  READING
+  LISTENING
+  WRITING
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum WritingStatus {
+  SUBMITTED
+  GRADED
+}
+
+enum NotificationType {
+  GENERAL
+  TEST_ASSIGNED
+  TEST_RESULT
+  DEADLINE_REMINDER
+  NEW_VOCABULARY
+  NEW_READING
+  NEW_LISTENING
+  WRITING_ASSIGNED
+  WRITING_GRADED
+  STUDENT_COMPLETED
+  WRITING_SUBMITTED
+}
+
+enum ActivityType {
+  LOGIN
+  LOGOUT
+  TEST_STARTED
+  TEST_SUBMITTED
+  TEST_RESUMED
+  TAB_BLUR
+  PAGE_REFRESH
+  AUTO_SUBMITTED
+  VOCABULARY_PRACTICE
+  READING_COMPLETED
+  LISTENING_COMPLETED
+  WRITING_SUBMITTED
+}
+
+enum VocabularyStatus {
+  NEW
+  LEARNING
+  LEARNED
+}
+
+enum AiRequestType {
+  GENERATE_TEST
+  PARSE_COMMAND
+  REGENERATE_QUESTION
+  ANALYZE_STUDENT
+  ANALYZE_GROUP
+  ANALYZE_WRITING
+  REVISION_TEST
+}
+
+enum AiRequestStatus {
+  PENDING
+  SUCCESS
+  ERROR
+}
+
+// ────────────────────────────── Auth / users ──────────────────────────────
+
+model User {
+  id                String     @id @default(cuid())
+  role              Role       @default(STUDENT)
+  firstName         String
+  lastName          String
+  username          String     @unique
+  passwordHash      String
+  avatarUrl         String?
+  phone             String?
+  age               Int?
+  status            UserStatus @default(ACTIVE)
+  refreshTokenHash  String?
+  lastLoginAt       DateTime?
+  deletedAt         DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  studentProfile    StudentProfile?
+  teacherProfile    TeacherProfile?
+  groupsCreated     Group[]
+  groupMemberships  GroupMember[]
+  testsCreated      Test[]
+  assignmentsCreated TestAssignment[]
+  attempts          TestAttempt[]
+  notifications     Notification[]
+  activityLogs      ActivityLog[]
+  streak            LearningStreak?
+  skillProgress     StudentProgress[]
+  vocabularyProgress VocabularyProgress[]
+  readingAttempts   ReadingAttempt[]
+  listeningAttempts ListeningAttempt[]
+  writingSubmissions WritingSubmission[]
+  aiRequests        AiRequest[]
+  aiUsageLogs       AiUsageLog[]
+  vocabularyCreated Vocabulary[]
+  readingsCreated   ReadingMaterial[]
+  listeningsCreated ListeningMaterial[]
+  writingsCreated   WritingAssignment[]
+
+  @@index([role, status])
+  @@index([createdAt])
+}
+
+model StudentProfile {
+  id       String   @id @default(cuid())
+  userId   String   @unique
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level    Level    @default(BEGINNER)
+  bio      String?
+  joinedAt DateTime @default(now())
+}
+
+model TeacherProfile {
+  id      String  @id @default(cuid())
+  userId  String  @unique
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject String? @default("English")
+  bio     String?
+}
+
+// ────────────────────────────── Groups ──────────────────────────────
+
+model Group {
+  id          String      @id @default(cuid())
+  name        String
+  level       Level       @default(BEGINNER)
+  description String?
+  status      GroupStatus @default(ACTIVE)
+  createdById String?
+  createdBy   User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  members     GroupMember[]
+  assignments TestAssignment[]
+
+  @@index([status])
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@unique([groupId, studentId])
+  @@index([studentId])
+}
+
+// ────────────────────────────── Tests ──────────────────────────────
+
+model Test {
+  id               String     @id @default(cuid())
+  title            String
+  description      String?
+  topic            String?
+  skill            Skill      @default(GRAMMAR)
+  difficulty       Level      @default(BEGINNER)
+  timeLimitSeconds Int        @default(1200)
+  passingScore     Int        @default(60)
+  instructions     String?
+  type             TestType   @default(MANUAL)
+  status           TestStatus @default(DRAFT)
+  aiPrompt         String?
+  createdById      String?
+  createdBy        User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  deletedAt        DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  questions    Question[]
+  assignments  TestAssignment[]
+  attempts     TestAttempt[]
+
+  @@index([status, deletedAt])
+  @@index([topic])
+  @@index([createdById])
+}
+
+model Question {
+  id            String       @id @default(cuid())
+  testId        String
+  test          Test         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  type          QuestionType @default(MULTIPLE_CHOICE)
+  text          String
+  topic         String?
+  explanation   String?
+  correctAnswer String?
+  order         Int          @default(0)
+  points        Int          @default(1)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  options QuestionOption[]
+  answers Answer[]
+
+  @@index([testId])
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String
+  isCorrect  Boolean  @default(false)
+  order      Int      @default(0)
+
+  @@index([questionId])
+}
+
+// ────────────────────────────── Assignments & attempts ──────────────────────────────
+
+model TestAssignment {
+  id               String           @id @default(cuid())
+  testId           String
+  test             Test             @relation(fields: [testId], references: [id], onDelete: Cascade)
+  groupId          String
+  group            Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  assignedById     String?
+  assignedBy       User?            @relation(fields: [assignedById], references: [id], onDelete: SetNull)
+  startAt          DateTime
+  deadlineAt       DateTime
+  durationSeconds  Int?
+  maxAttempts      Int              @default(1)
+  status           AssignmentStatus @default(ACTIVE)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  attempts TestAttempt[]
+
+  @@unique([testId, groupId])
+  @@index([groupId, deadlineAt])
+  @@index([startAt])
+}
+
+model TestAttempt {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId          String
+  test            Test          @relation(fields: [testId], references: [id], onDelete: Cascade)
+  assignmentId    String?
+  assignment      TestAssignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  startedAt       DateTime      @default(now())
+  expiresAt       DateTime?
+  submittedAt     DateTime?
+  durationSeconds Int?
+  score           Int           @default(0)
+  totalPoints     Int           @default(0)
+  percentage      Float         @default(0)
+  status          AttemptStatus @default(IN_PROGRESS)
+  tabSwitches     Int           @default(0)
+  refreshCount    Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  answers Answer[]
+
+  @@index([userId, testId])
+  @@index([testId, status])
+  @@index([assignmentId, status])
+  @@index([startedAt])
+}
+
+model Answer {
+  id                String    @id @default(cuid())
+  attemptId         String
+  attempt           TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId        String
+  question          Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answerText        String?
+  selectedOptionIds String[]  @default([])
+  isCorrect         Boolean?
+  answeredAt        DateTime  @default(now())
+
+  @@unique([attemptId, questionId])
+  @@index([questionId])
+}
+
+// ────────────────────────────── Vocabulary ──────────────────────────────
+
+model Vocabulary {
+  id           String   @id @default(cuid())
+  word         String
+  uzbek        String
+  russian      String?
+  example      String?
+  pronunciation String?
+  category     String?
+  level        Level    @default(BEGINNER)
+  createdById  String?
+  createdBy    User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  progress VocabularyProgress[]
+
+  @@index([level])
+  @@index([category])
+}
+
+model VocabularyProgress {
+  id           String          @id @default(cuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabularyId String
+  vocabulary   Vocabulary      @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+  status       VocabularyStatus @default(NEW)
+  correctCount Int             @default(0)
+  wrongCount   Int             @default(0)
+  masteredAt   DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@unique([userId, vocabularyId])
+  @@index([userId, status])
+}
+
+// ────────────────────────────── Reading ──────────────────────────────
+
+model ReadingMaterial {
+  id              String        @id @default(cuid())
+  title           String
+  level           Level         @default(BEGINNER)
+  topic           String?
+  text            String
+  estimatedMinutes Int          @default(5)
+  status          ContentStatus @default(PUBLISHED)
+  createdById     String?
+  createdBy       User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  questions ReadingQuestion[]
+  attempts  ReadingAttempt[]
+
+  @@index([level, status])
+}
+
+model ReadingQuestion {
+  id            String         @id @default(cuid())
+  materialId    String
+  material      ReadingMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  text          String
+  options       String[]       @default([])
+  correctAnswer String
+  order         Int            @default(0)
+  points        Int            @default(1)
+
+  @@index([materialId])
+}
+
+model ReadingAttempt {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  materialId      String
+  material        ReadingMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  startedAt       DateTime       @default(now())
+  submittedAt     DateTime?
+  durationSeconds Int?
+  score           Int            @default(0)
+  totalPoints     Int            @default(0)
+  percentage      Float          @default(0)
+  answers         Json           @default("[]")
+
+  @@index([userId, materialId])
+  @@index([materialId])
+}
+
+// ────────────────────────────── Listening ──────────────────────────────
+
+model ListeningMaterial {
+  id              String        @id @default(cuid())
+  title           String
+  level           Level         @default(BEGINNER)
+  topic           String?
+  audioUrl        String
+  transcript      String?
+  estimatedMinutes Int          @default(4)
+  status          ContentStatus @default(PUBLISHED)
+  createdById     String?
+  createdBy       User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  questions ListeningQuestion[]
+  attempts  ListeningAttempt[]
+
+  @@index([level, status])
+}
+
+model ListeningQuestion {
+  id            String           @id @default(cuid())
+  materialId    String
+  material      ListeningMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  text          String
+  options       String[]         @default([])
+  correctAnswer String
+  order         Int              @default(0)
+  points        Int              @default(1)
+
+  @@index([materialId])
+}
+
+model ListeningAttempt {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  materialId      String
+  material        ListeningMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  startedAt       DateTime         @default(now())
+  submittedAt     DateTime?
+  durationSeconds Int?
+  score           Int              @default(0)
+  totalPoints     Int              @default(0)
+  percentage      Float            @default(0)
+  answers         Json             @default("[]")
+
+  @@index([userId, materialId])
+  @@index([materialId])
+}
+
+// ────────────────────────────── Writing ──────────────────────────────
+
+model WritingAssignment {
+  id           String        @id @default(cuid())
+  title        String
+  instructions String
+  minWords     Int           @default(100)
+  maxWords     Int           @default(400)
+  level        Level         @default(INTERMEDIATE)
+  topic        String?
+  skill        Skill         @default(WRITING)
+  dueAt        DateTime?
+  status       ContentStatus @default(PUBLISHED)
+  createdById  String?
+  createdBy    User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  submissions WritingSubmission[]
+
+  @@index([status, dueAt])
+}
+
+model WritingSubmission {
+  id           String        @id @default(cuid())
+  assignmentId String
+  assignment   WritingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text         String
+  wordCount    Int           @default(0)
+  status       WritingStatus @default(SUBMITTED)
+  score        Int?
+  feedback     String?
+  aiFeedback   Json?
+  gradedById   String?
+  submittedAt  DateTime      @default(now())
+  gradedAt     DateTime?
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([assignmentId, userId])
+  @@index([userId, status])
+}
+
+// ────────────────────────────── System ──────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType @default(GENERAL)
+  title     String
+  body      String?
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model ActivityLog {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ActivityType
+  meta      Json?
+  createdAt DateTime     @default(now())
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+}
+
+model LearningStreak {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentStreak  Int      @default(0)
+  longestStreak  Int      @default(0)
+  lastActivityOn DateTime?
+  updatedAt      DateTime @updatedAt
+}
+
+model StudentProgress {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill             Skill
+  completedCount    Int      @default(0)
+  correctAnswers    Int      @default(0)
+  totalAnswers      Int      @default(0)
+  totalSeconds      Int      @default(0)
+  averagePercentage Float    @default(0)
+  lastActivityAt    DateTime @default(now())
+
+  @@unique([userId, skill])
+}
+
+// ────────────────────────────── AI ──────────────────────────────
+
+model AiRequest {
+  id          String           @id @default(cuid())
+  userId      String?
+  user        User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type        AiRequestType
+  prompt      String
+  interpreted Json?
+  output      Json?
+  status      AiRequestStatus  @default(PENDING)
+  model       String?
+  error       String?
+  durationMs  Int?
+  createdAt   DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+}
+
+model AiUsageLog {
+  id               String   @id @default(cuid())
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  provider         String
+  model            String
+  requestType      String
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  durationMs       Int      @default(0)
+  status           String   @default("success")
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+}
