@@ -11,7 +11,7 @@ services:
     plan: free
     region: frankfurt
     branch: main
-    buildCommand: npm run db:generate -w server && npm run build -w server
+    buildCommand: npm install --include=dev && npm run db:generate -w server && npm run build -w server
     startCommand: npm run start:prod -w server
     healthCheckPath: /api/health
     autoDeploy: true
