@@ -149,33 +149,36 @@ export default function StudentDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-2.5">
             {upcoming.length === 0 && <p className="text-sm text-ink-500">Nothing due right now. 🎉</p>}
-            {upcoming.slice(0, 6).map((u) => (
-              <div key={u.assignmentId} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-ink-200 p-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${SKILL_ACCENT[u.skill]}`}>
-                      {SKILL_LABEL[u.skill]}
-                    </span>
-                    <p className="truncate text-sm font-medium text-ink-900">{u.title}</p>
-                    {u.finished && u.bestScore !== null && (
-                      <span className={`text-xs font-semibold ${scoreTone(u.bestScore)}`}>best {u.bestScore}%</span>
-                    )}
+            {upcoming.slice(0, 6).map((u) => {
+              const noAttempts = u.attemptsUsed >= u.maxAttempts;
+              return (
+                <div key={u.assignmentId} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-ink-200 p-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${SKILL_ACCENT[u.skill]}`}>
+                        {SKILL_LABEL[u.skill]}
+                      </span>
+                      <p className="truncate text-sm font-medium text-ink-900">{u.title}</p>
+                      {u.finished && u.bestScore !== null && (
+                        <span className={`text-xs font-semibold ${scoreTone(u.bestScore)}`}>best {u.bestScore}%</span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-xs text-ink-500">
+                      {u.group} · due {fmtDateTime(u.deadlineAt)} · {Math.round(u.timeLimitSeconds / 60)} min
+                    </p>
                   </div>
-                  <p className="mt-0.5 text-xs text-ink-500">
-                    {u.group} · due {fmtDateTime(u.deadlineAt)} · {Math.round(u.timeLimitSeconds / 60)} min
-                  </p>
+                  <Button
+                    size="sm"
+                    variant={u.finished ? "outline" : "default"}
+                    disabled={startTest.isPending || noAttempts}
+                    onClick={() => startTest.mutate(u.assignmentId)}
+                  >
+                    <Play className="h-3.5 w-3.5" />
+                    {noAttempts ? "No attempts left" : u.finished ? "Retry" : "Start test"}
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  variant={u.finished ? "outline" : "default"}
-                  disabled={startTest.isPending}
-                  onClick={() => startTest.mutate(u.assignmentId)}
-                >
-                  <Play className="h-3.5 w-3.5" />
-                  {u.finished ? "Retry" : "Start test"}
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
 

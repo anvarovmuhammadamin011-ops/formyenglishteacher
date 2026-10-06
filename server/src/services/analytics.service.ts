@@ -310,6 +310,8 @@ export async function studentDashboard(userId: string) {
       timeLimitSeconds: a.test.timeLimitSeconds,
       finished: a.attempts.length > 0,
       bestScore: a.attempts[0]?.percentage ?? null,
+      attemptsUsed: a.attempts.length,
+      maxAttempts: a.maxAttempts,
     })),
     recentAttempts: recent.map((a) => ({
       id: a.id,

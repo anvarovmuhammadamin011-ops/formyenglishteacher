@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 import { AppShell, Splash } from "@/components/layout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import LoginPage from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
@@ -125,7 +126,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <Root />
+          <ErrorBoundary>
+            <Root />
+          </ErrorBoundary>
         </BrowserRouter>
         <Toaster position="top-right" richColors closeButton />
       </AuthProvider>

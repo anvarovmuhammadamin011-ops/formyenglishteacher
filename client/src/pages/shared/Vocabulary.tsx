@@ -71,7 +71,7 @@ export default function VocabularyPage() {
 
   const categories = useQuery({
     queryKey: ["vocabulary-categories"],
-    queryFn: () => api.get<string[]>("/vocabulary/categories"),
+    queryFn: () => api.get<Array<{ category: string; count: number }>>("/vocabulary/categories"),
   });
 
   const saveWord = useMutation({
@@ -159,8 +159,8 @@ export default function VocabularyPage() {
         <Select value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }} className="w-40">
           <option value="">All categories</option>
           {(categories.data ?? []).map((c) => (
-            <option key={c} value={c}>
-              {c}
+            <option key={c.category} value={c.category}>
+              {c.category} ({c.count})
             </option>
           ))}
         </Select>

@@ -45,6 +45,7 @@ groupsRouter.get(
 
 groupsRouter.get(
   "/options",
+  requireTeacher,
   h(async (_req, res) => {
     const options = await groupService.listGroupOptions();
     return ok(res, options);
@@ -63,6 +64,7 @@ groupsRouter.post(
 
 groupsRouter.get(
   "/:id",
+  requireTeacher,
   validate({ params: idParam }),
   h(async (req, res) => {
     const group = await groupService.getGroup(getParams<{ id: string }>(req).id, { includeStats: true });

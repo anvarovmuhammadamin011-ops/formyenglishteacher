@@ -448,6 +448,8 @@ export interface StudentDashboard {
     timeLimitSeconds: number;
     finished: boolean;
     bestScore: number | null;
+    attemptsUsed: number;
+    maxAttempts: number;
   }>;
   recentAttempts: Array<{
     id: string;
