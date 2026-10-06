@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Check, Eye, RotateCcw, X } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, mediaUrl } from "@/lib/api";
 import type { MaterialDetail, MaterialSubmitResult } from "@/lib/types";
 import { useAuth } from "@/lib/auth";
 import {
@@ -97,7 +97,7 @@ export default function MaterialDetailPage({ kind }: { kind: Kind }) {
           ) : (
             <div className="space-y-3">
               {m.audioUrl ? (
-                <audio controls preload="none" className="w-full" src={m.audioUrl}>
+                <audio controls preload="none" className="w-full" src={mediaUrl(m.audioUrl)}>
                   Your browser does not support audio.
                 </audio>
               ) : (

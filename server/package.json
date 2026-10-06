@@ -7,6 +7,7 @@
     "dev:db": "tsx src/scripts/dev-db.mts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
+    "start:prod": "npx prisma db push --skip-generate && node dist/index.js",
     "typecheck": "tsc --noEmit",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",

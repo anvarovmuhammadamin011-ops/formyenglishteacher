@@ -1,5 +1,5 @@
 import net from "node:net";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import path from "node:path";
 import { env } from "./config/env";
 import { prisma, disconnectPrisma } from "./lib/prisma";
@@ -83,6 +83,24 @@ async function ensureDatabase(): Promise<void> {
 
 async function main() {
   await ensureDatabase();
+
+  // First boot on an empty database: seed demo data automatically so a fresh
+  // Railway deploy is usable out of the box. Skipped once any user exists, so
+  // restarts never wipe real data. FORCE_SEED overrides the seed's production guard.
+  const userCount = await prisma.user.count();
+  if (userCount === 0) {
+    console.log("[db] Empty database — seeding demo data ...");
+    const repoRoot = path.resolve(__dirname, "../..");
+    const seed = spawnSync("npm", ["run", "db:seed", "-w", "server"], {
+      cwd: repoRoot,
+      stdio: "inherit",
+      env: { ...process.env, FORCE_SEED: "1" },
+    });
+    if (seed.status !== 0) {
+      console.error("[db] Seeding failed — aborting start.");
+      process.exit(seed.status ?? 1);
+    }
+  }
 
   const { createApp } = await import("./app");
   const app = createApp();

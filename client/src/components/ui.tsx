@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
+import { mediaUrl } from "@/lib/api";
 
 /* ───────────────────────── Button ───────────────────────── */
 
@@ -394,7 +395,7 @@ export function Avatar({
   useEffect(() => setFailed(false), [src]);
   const dims = size === "sm" ? "h-6 w-6 text-[10px]" : "h-8 w-8 text-xs";
   if (src && !failed) {
-    return <img src={src} alt="" onError={() => setFailed(true)} className={cn("rounded-full object-cover ring-1 ring-ink-200", dims, className)} />;
+    return <img src={mediaUrl(src)} alt="" onError={() => setFailed(true)} className={cn("rounded-full object-cover ring-1 ring-ink-200", dims, className)} />;
   }
   return (
     <span

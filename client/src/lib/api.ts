@@ -103,3 +103,12 @@ export const api = {
 export function downloadUrl(path: string) {
   return buildUrl(path);
 }
+
+// Media (avatars, listening audio) is stored on the backend as a relative
+// /uploads/... path. On a separate-origin deployment (e.g. Vercel frontend +
+// Railway backend) it must be prefixed with API_BASE; absolute URLs pass through.
+export function mediaUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined;
+  if (/^(https?:)?\/\//i.test(path) || path.startsWith("data:")) return path;
+  return `${API_BASE}${path}`;
+}
