@@ -26,6 +26,10 @@ type RequestOptions = {
   retry?: boolean;
 };
 
+// Optional absolute API origin for deployments where the backend is hosted
+// separately (set VITE_API_URL at build time). Empty = same origin (dev proxy).
+export const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+
 function buildUrl(path: string, query?: RequestOptions["query"]) {
   const qs = new URLSearchParams();
   if (query) {
@@ -34,7 +38,7 @@ function buildUrl(path: string, query?: RequestOptions["query"]) {
     }
   }
   const suffix = qs.toString();
-  return `/api${path}${suffix ? `?${suffix}` : ""}`;
+  return `${API_BASE}/api${path}${suffix ? `?${suffix}` : ""}`;
 }
 
 async function toError(res: Response): Promise<ApiError> {
@@ -66,7 +70,7 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
 
   // Transparently refresh an expired access token once (cookie-based refresh).
   if (res.status === 401 && opts.retry !== false) {
-    const refresh = await fetch("/api/auth/refresh", {
+    const refresh = await fetch(`${API_BASE}/api/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: "{}",

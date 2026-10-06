@@ -1,30 +1,44 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { GraduationCap, Lock, User2 } from "lucide-react";
+import { GraduationCap, Loader2, Presentation, UserRound } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { Button, Card, Field, Input } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { errorMessage } from "@/lib/utils";
+
+type Role = "TEACHER" | "STUDENT";
+
+const ACCOUNTS: Record<Role, { username: string; password: string; label: string; desc: string }> = {
+  TEACHER: {
+    username: "teacher",
+    password: "Teacher123!",
+    label: "Teacher",
+    desc: "Groups · tests · analytics",
+  },
+  STUDENT: {
+    username: "ali.karimov",
+    password: "student123",
+    label: "Student",
+    desc: "Tests · vocabulary · rankings",
+  },
+};
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [active, setActive] = useState<Role | null>(null);
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!username || !password) return;
-    setLoading(true);
+  async function enter(role: Role) {
+    if (active) return;
+    setActive(role);
     try {
-      const user = await login(username.trim(), password);
-      toast.success(`Welcome back, ${user.firstName}!`);
+      const acc = ACCOUNTS[role];
+      const user = await login(acc.username, acc.password);
+      toast.success(`Welcome, ${user.firstName}!`);
       navigate("/", { replace: true });
     } catch (err) {
       toast.error(errorMessage(err));
-    } finally {
-      setLoading(false);
+      setActive(null);
     }
   }
 
@@ -65,47 +79,51 @@ export default function LoginPage() {
             <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white">
               <GraduationCap className="h-5 w-5" />
             </span>
-            <h2 className="text-lg font-bold text-ink-900">Sign in to ELMS</h2>
-            <p className="mt-1 text-xs text-ink-500">Use the account your teacher gave you.</p>
+            <h2 className="text-lg font-bold text-ink-900">Enter ELMS</h2>
+            <p className="mt-1 text-xs text-ink-500">Choose how you want to sign in.</p>
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-4">
-            <Field label="Username">
-              <div className="relative">
-                <User2 className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <Input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="e.g. teacher"
-                  autoComplete="username"
-                  className="pl-8"
-                  autoFocus
-                />
-              </div>
-            </Field>
-            <Field label="Password">
-              <div className="relative">
-                <Lock className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  className="pl-8"
-                />
-              </div>
-            </Field>
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
-              {loading ? "Signing in…" : "Sign in"}
-            </Button>
-          </form>
-
-          <div className="mt-5 rounded-lg bg-ink-50 p-3 text-[11px] leading-relaxed text-ink-500 ring-1 ring-ink-200">
-            <p className="font-semibold text-ink-600">Demo accounts</p>
-            <p>Teacher: <code className="font-mono">teacher / Teacher123!</code></p>
-            <p>Student: <code className="font-mono">aziza.rasulova / student123</code></p>
+          <div className="space-y-3">
+            {(Object.keys(ACCOUNTS) as Role[]).map((role) => {
+              const acc = ACCOUNTS[role];
+              const isLoading = active === role;
+              const disabled = active !== null;
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => enter(role)}
+                  className={`group flex w-full items-center gap-3.5 rounded-xl border p-4 text-left transition-all
+                    ${isLoading ? "border-brand-400 bg-brand-50 ring-2 ring-brand-500/30" : "border-ink-200 bg-white hover:border-brand-400 hover:bg-brand-50/50 hover:shadow-sm"}
+                    ${disabled && !isLoading ? "opacity-50" : ""}`}
+                >
+                  <span
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors
+                      ${role === "TEACHER" ? "bg-indigo-100 text-indigo-600" : "bg-emerald-100 text-emerald-600"}`}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : role === "TEACHER" ? (
+                      <Presentation className="h-5 w-5" />
+                    ) : (
+                      <UserRound className="h-5 w-5" />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold text-ink-900">
+                      {isLoading ? "Signing in…" : acc.label}
+                    </span>
+                    <span className="block text-xs text-ink-500">{acc.desc}</span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
+
+          <p className="mt-5 text-center text-[11px] text-ink-400">
+            Quick access — demo accounts are pre-filled automatically.
+          </p>
         </Card>
       </div>
     </div>

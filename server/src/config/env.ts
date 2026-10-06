@@ -17,6 +17,7 @@ const envSchema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((v) => v === "true"),
+  COOKIE_SAMESITE: z.enum(["lax", "strict", "none"]).default("lax"),
   CLIENT_ORIGIN: z.string().default("http://localhost:5173"),
   AI_PROVIDER: z.string().default("openai"),
   AI_API_KEY: z.string().default(""),
