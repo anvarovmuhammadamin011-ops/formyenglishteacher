@@ -618,8 +618,8 @@ export interface AiRequestRow {
 }
 
 /* ────────────────────────────── Local DB schema ──────────────────────────────
-   Everything below mirrors server/prisma/schema.prisma, but dates are ISO
-   strings and relations are foreign-key id fields instead of objects. */
+   The client-side mirror of the old Prisma schema: dates are ISO strings and
+   relations are foreign-key id fields instead of objects. */
 
 export type NotificationType =
   | "GENERAL"

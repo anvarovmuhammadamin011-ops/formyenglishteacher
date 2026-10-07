@@ -4,29 +4,15 @@
   "private": true,
   "description": "English Learning Management System - teacher's personal English teaching operating system",
   "workspaces": [
-    "server",
     "client"
   ],
   "scripts": {
-    "dev": "concurrently -n db,api,web -c blue,green,magenta \"npm run dev:db\" \"npm run dev:api\" \"npm run dev:web\"",
-    "dev:api": "npm run dev -w server",
-    "dev:web": "npm run dev -w client",
-    "dev:db": "npm run dev:db -w server",
-    "build": "npm run build -w server && npm run build -w client",
-    "db:push": "npm run db:push -w server",
-    "db:seed": "npm run db:seed -w server",
-    "db:reset": "npm run db:reset -w server",
-    "typecheck": "npm run typecheck -w server && npm run typecheck -w client",
-    "start": "npm run start -w server"
-  },
-  "devDependencies": {
-    "@types/multer": "^2.3.0",
-    "concurrently": "^9.2.1"
+    "dev": "npm run dev -w client",
+    "build": "npm run build -w client",
+    "typecheck": "npm run typecheck -w client",
+    "preview": "npm run preview -w client"
   },
   "engines": {
     "node": ">=20"
-  },
-  "dependencies": {
-    "multer": "^2.4.0"
   }
 }

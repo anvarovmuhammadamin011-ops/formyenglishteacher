@@ -97,7 +97,7 @@ export async function chatRaw(options: ChatOptions): Promise<{ content: string; 
   } catch (err) {
     const message =
       err instanceof Error && /failed|network|cors/i.test(err.message)
-        ? "AI so'rovi bloklandi (CORS/tarmoq). Internet aloqasini tekshiring yoki VITE_API_URL orqali serverless AI proxysini yoqing."
+        ? "AI so'rovi bloklandi (CORS/tarmoq). Internet aloqasini tekshiring va API kalitni Settings → AI bo'limidan tekshiring."
         : "AI ga ulanib bo'lmadi.";
     logAiRequest({ requestType, prompt: options.messages.map((m) => m.content).join("\n"), status: "ERROR", error: message, durationMs: Math.round(performance.now() - started), model: cfg.model });
     throw new HttpError(502, message, "AI_UNAVAILABLE");
