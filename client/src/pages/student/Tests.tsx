@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CalendarClock, History, Play, RotateCcw, Timer } from "lucide-react";
+import { CalendarClock, Play, RotateCcw, Timer } from "lucide-react";
 import { api } from "@/lib/api";
 import type { AssignedRow, AttemptView } from "@/lib/types";
 import {
@@ -74,15 +74,7 @@ export default function StudentTestsPage() {
 
   return (
     <>
-      <PageHeader
-        title="My tests"
-        subtitle="Tests assigned to your groups."
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/history")}>
-            <History className="h-3.5 w-3.5" /> Attempt history
-          </Button>
-        }
-      />
+      <PageHeader title="My tests" subtitle="Tests assigned to your groups." />
 
       <Tabs
         tabs={STATE_TABS.map((t) => ({

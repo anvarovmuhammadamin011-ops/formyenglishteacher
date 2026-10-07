@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CheckCircle2, Download, Home, XCircle, MinusCircle } from "lucide-react";
-import { api, downloadUrl } from "@/lib/api";
+import { api } from "@/lib/api";
 import type { AttemptResult } from "@/lib/types";
 import {
   Badge,
@@ -42,11 +42,9 @@ export default function ResultPage() {
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-3.5 w-3.5" /> Back
         </Button>
-        <a href={downloadUrl(`/reports/attempts/${r.id}/report.pdf`)} target="_blank" rel="noreferrer">
-          <Button variant="outline" size="sm">
-            <Download className="h-3.5 w-3.5" /> PDF report
-          </Button>
-        </a>
+        <Button variant="outline" size="sm" onClick={() => window.print()}>
+          <Download className="h-3.5 w-3.5" /> PDF report
+        </Button>
       </div>
 
       {/* Score hero */}
@@ -160,11 +158,6 @@ export default function ResultPage() {
               <Button variant="outline" onClick={() => navigate("/")}>
                 <Home className="h-3.5 w-3.5" /> Dashboard
               </Button>
-              <Link to="/history">
-                <Button variant="ghost" className="w-full">
-                  View attempt history
-                </Button>
-              </Link>
             </CardContent>
           </Card>
         </div>

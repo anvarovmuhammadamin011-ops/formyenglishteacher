@@ -616,3 +616,314 @@ export interface AiRequestRow {
   error: string | null;
   createdAt: string;
 }
+
+/* ────────────────────────────── Local DB schema ──────────────────────────────
+   Everything below mirrors server/prisma/schema.prisma, but dates are ISO
+   strings and relations are foreign-key id fields instead of objects. */
+
+export type NotificationType =
+  | "GENERAL"
+  | "TEST_ASSIGNED"
+  | "TEST_RESULT"
+  | "DEADLINE_REMINDER"
+  | "NEW_VOCABULARY"
+  | "NEW_READING"
+  | "NEW_LISTENING"
+  | "WRITING_ASSIGNED"
+  | "WRITING_GRADED"
+  | "STUDENT_COMPLETED"
+  | "WRITING_SUBMITTED";
+
+export type ActivityType =
+  | "LOGIN"
+  | "LOGOUT"
+  | "TEST_STARTED"
+  | "TEST_SUBMITTED"
+  | "TEST_RESUMED"
+  | "TAB_BLUR"
+  | "PAGE_REFRESH"
+  | "AUTO_SUBMITTED"
+  | "VOCABULARY_PRACTICE"
+  | "READING_COMPLETED"
+  | "LISTENING_COMPLETED"
+  | "WRITING_SUBMITTED";
+
+export type VocabularyStatus = "NEW" | "LEARNING" | "LEARNED";
+export type ContentStatus = "DRAFT" | "PUBLISHED";
+export type GroupStatus = "ACTIVE" | "ARCHIVED";
+export type AssignmentStatus = "ACTIVE" | "CLOSED";
+export type TestStatusValue = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
+export interface AiConfig {
+  provider: string;
+  apiKey: string;
+  model: string;
+  baseUrl: string;
+  maxTokens: number;
+  temperature: number;
+}
+
+export interface DbUser {
+  id: string;
+  role: Role;
+  firstName: string;
+  lastName: string;
+  username: string;
+  passwordHash: string;
+  avatarUrl: string | null;
+  phone: string | null;
+  age: number | null;
+  status: "ACTIVE" | "INACTIVE";
+  lastLoginAt: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  studentProfile: { level: Level; bio: string | null; joinedAt: string } | null;
+  teacherProfile: { subject: string | null; bio: string | null } | null;
+}
+
+export interface DbGroup {
+  id: string;
+  name: string;
+  level: Level;
+  description: string | null;
+  status: GroupStatus;
+  createdById: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DbGroupMember {
+  id: string;
+  groupId: string;
+  studentId: string;
+  joinedAt: string;
+}
+
+export interface DbTest {
+  id: string;
+  title: string;
+  description: string | null;
+  topic: string | null;
+  skill: Skill;
+  difficulty: Level;
+  timeLimitSeconds: number;
+  passingScore: number;
+  instructions: string | null;
+  type: "MANUAL" | "AI";
+  status: TestStatusValue;
+  aiPrompt: string | null;
+  createdById: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DbQuestion {
+  id: string;
+  testId: string;
+  type: QuestionType;
+  text: string;
+  topic: string | null;
+  explanation: string | null;
+  correctAnswer: string | null;
+  order: number;
+  points: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DbOption {
+  id: string;
+  questionId: string;
+  text: string;
+  isCorrect: boolean;
+  order: number;
+}
+
+export interface DbAssignment {
+  id: string;
+  testId: string;
+  groupId: string;
+  assignedById: string | null;
+  startAt: string;
+  deadlineAt: string;
+  durationSeconds: number | null;
+  maxAttempts: number;
+  status: AssignmentStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DbAttempt {
+  id: string;
+  userId: string;
+  testId: string;
+  assignmentId: string | null;
+  startedAt: string;
+  expiresAt: string | null;
+  submittedAt: string | null;
+  durationSeconds: number | null;
+  score: number;
+  totalPoints: number;
+  percentage: number;
+  status: AttemptStatus;
+  tabSwitches: number;
+  refreshCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DbAnswer {
+  id: string;
+  attemptId: string;
+  questionId: string;
+  answerText: string | null;
+  selectedOptionIds: string[];
+  isCorrect: boolean | null;
+  answeredAt: string;
+}
+
+export interface DbVocabulary {
+  id: string;
+  word: string;
+  uzbek: string;
+  russian: string | null;
+  example: string | null;
+  pronunciation: string | null;
+  category: string | null;
+  level: Level;
+  createdById: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DbVocabularyProgress {
+  id: string;
+  userId: string;
+  vocabularyId: string;
+  status: VocabularyStatus;
+  correctCount: number;
+  wrongCount: number;
+  masteredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DbReading {
+  id: string;
+  title: string;
+  level: Level;
+  topic: string | null;
+  text: string;
+  estimatedMinutes: number;
+  status: ContentStatus;
+  createdById: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DbReadingQuestion {
+  id: string;
+  materialId: string;
+  text: string;
+  options: string[];
+  correctAnswer: string;
+  order: number;
+  points: number;
+}
+
+export interface DbReadingAttempt {
+  id: string;
+  userId: string;
+  materialId: string;
+  startedAt: string;
+  submittedAt: string | null;
+  durationSeconds: number | null;
+  score: number;
+  totalPoints: number;
+  percentage: number;
+  answers: Array<{ questionId: string; answer: number | string | null }>;
+}
+
+export interface DbNotification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  link: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface DbActivityLog {
+  id: string;
+  userId: string;
+  type: ActivityType;
+  meta?: unknown;
+  createdAt: string;
+}
+
+export interface DbStreak {
+  id: string;
+  userId: string;
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityOn: string | null;
+  updatedAt: string;
+}
+
+export interface DbProgress {
+  id: string;
+  userId: string;
+  skill: Skill;
+  completedCount: number;
+  correctAnswers: number;
+  totalAnswers: number;
+  totalSeconds: number;
+  averagePercentage: number;
+  lastActivityAt: string | null;
+  updatedAt: string;
+}
+
+export interface DbAiRequest {
+  id: string;
+  userId: string | null;
+  type: string;
+  prompt: string;
+  output?: unknown;
+  status: "PENDING" | "SUCCESS" | "ERROR";
+  model: string | null;
+  error: string | null;
+  durationMs: number | null;
+  promptTokens: number;
+  completionTokens: number;
+  createdAt: string;
+}
+
+export interface Db {
+  version: number;
+  sessionUserId: string | null;
+  aiConfig: AiConfig;
+  users: DbUser[];
+  groups: DbGroup[];
+  groupMembers: DbGroupMember[];
+  tests: DbTest[];
+  questions: DbQuestion[];
+  questionOptions: DbOption[];
+  assignments: DbAssignment[];
+  attempts: DbAttempt[];
+  answers: DbAnswer[];
+  vocabulary: DbVocabulary[];
+  vocabularyProgress: DbVocabularyProgress[];
+  readings: DbReading[];
+  readingQuestions: DbReadingQuestion[];
+  readingAttempts: DbReadingAttempt[];
+  notifications: DbNotification[];
+  activityLogs: DbActivityLog[];
+  streaks: DbStreak[];
+  progress: DbProgress[];
+  aiRequests: DbAiRequest[];
+  meta: { seededAt: string | null; updatedAt: string };
+}

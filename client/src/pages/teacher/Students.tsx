@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Download, KeyRound, Plus, Search, Trash2, UserRound } from "lucide-react";
-import { api, downloadUrl } from "@/lib/api";
+import { api } from "@/lib/api";
+import { downloadCsv, stamp } from "@/lib/export";
 import type { Level, Paginated, StudentRow } from "@/lib/types";
 import {
   Avatar,
@@ -172,11 +173,30 @@ export default function StudentsPage() {
         subtitle={`${total} enrolled`}
         actions={
           <>
-            <a href={downloadUrl("/exports/students.xlsx")}>
-              <Button variant="outline" size="sm">
-                <Download className="h-3.5 w-3.5" /> Export XLSX
-              </Button>
-            </a>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                downloadCsv(
+                  `students_${stamp()}`,
+                  ["Name", "Username", "Level", "Group", "Status", "Age", "Phone", "Streak", "Created", "Last login"],
+                  rows.map((s) => [
+                    `${s.firstName} ${s.lastName}`,
+                    s.username,
+                    s.studentProfile?.level ?? "",
+                    s.group?.name ?? "",
+                    s.status,
+                    s.age ?? "",
+                    s.phone ?? "",
+                    s.streak?.currentStreak ?? 0,
+                    s.createdAt,
+                    s.lastLoginAt ?? "",
+                  ]),
+                )
+              }
+            >
+              <Download className="h-3.5 w-3.5" /> Export CSV
+            </Button>
             <Button size="sm" onClick={openCreate}>
               <Plus className="h-3.5 w-3.5" /> Add student
             </Button>

@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarClock, Download } from "lucide-react";
-import { api, downloadUrl } from "@/lib/api";
+import { api } from "@/lib/api";
+import { downloadCsv, stamp } from "@/lib/export";
 import type { Paginated, TeacherAssignment } from "@/lib/types";
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   EmptyState,
@@ -50,11 +52,30 @@ export default function AssignmentsPage() {
         title="Assignments"
         subtitle="Every test assigned to a group, with completion status."
         actions={
-          <a href={downloadUrl("/exports/students.xlsx")}>
-            <Badge tone="green" className="hidden sm:inline-flex">
-              <Download className="mr-1 h-3 w-3" /> Students XLSX
-            </Badge>
-          </a>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              downloadCsv(
+                `assignments_${stamp()}`,
+                ["Test", "Group", "Assigned by", "Start", "Deadline", "Students", "Completed", "Completion %", "Max attempts", "Status"],
+                items.map((a) => [
+                  a.test.title,
+                  a.group.name,
+                  `${a.assignedBy.firstName} ${a.assignedBy.lastName}`,
+                  a.startAt,
+                  a.deadlineAt,
+                  a.studentCount,
+                  a.completedCount,
+                  a.completionRate,
+                  a.maxAttempts,
+                  a.status,
+                ]),
+              )
+            }
+          >
+            <Download className="mr-1 h-3 w-3" /> Export CSV
+          </Button>
         }
       />
 

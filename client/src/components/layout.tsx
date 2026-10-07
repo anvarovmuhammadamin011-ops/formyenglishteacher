@@ -4,22 +4,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
   BookOpen,
-  CalendarDays,
   ChevronDown,
   FileText,
   GraduationCap,
-  Headphones,
   LayoutDashboard,
   LogOut,
   Menu,
-  Mic,
-  PenLine,
   FlaskConical,
   Settings,
   Sparkles,
-  Trophy,
   Users,
-  UsersRound,
   X,
   ListChecks,
 } from "lucide-react";
@@ -46,15 +40,12 @@ const TEACHER_NAV: NavSection[] = [
     label: "Overview",
     items: [
       { to: "/", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" />, end: true },
-      { to: "/analytics", label: "Analytics", icon: <Trophy className="h-4 w-4" /> },
-      { to: "/calendar", label: "Calendar", icon: <CalendarDays className="h-4 w-4" /> },
     ],
   },
   {
     label: "People",
     items: [
       { to: "/students", label: "Students", icon: <Users className="h-4 w-4" /> },
-      { to: "/groups", label: "Groups", icon: <UsersRound className="h-4 w-4" /> },
     ],
   },
   {
@@ -70,8 +61,6 @@ const TEACHER_NAV: NavSection[] = [
     items: [
       { to: "/vocabulary", label: "Vocabulary", icon: <BookOpen className="h-4 w-4" /> },
       { to: "/reading", label: "Reading", icon: <FileText className="h-4 w-4" /> },
-      { to: "/listening", label: "Listening", icon: <Headphones className="h-4 w-4" /> },
-      { to: "/writing", label: "Writing", icon: <PenLine className="h-4 w-4" /> },
     ],
   },
   {
@@ -86,8 +75,6 @@ const STUDENT_NAV: NavSection[] = [
     items: [
       { to: "/", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" />, end: true },
       { to: "/tests", label: "My Tests", icon: <GraduationCap className="h-4 w-4" /> },
-      { to: "/rankings", label: "Rankings", icon: <Trophy className="h-4 w-4" /> },
-      { to: "/calendar", label: "Calendar", icon: <CalendarDays className="h-4 w-4" /> },
     ],
   },
   {
@@ -95,9 +82,6 @@ const STUDENT_NAV: NavSection[] = [
     items: [
       { to: "/vocabulary", label: "Vocabulary", icon: <BookOpen className="h-4 w-4" /> },
       { to: "/reading", label: "Reading", icon: <FileText className="h-4 w-4" /> },
-      { to: "/listening", label: "Listening", icon: <Headphones className="h-4 w-4" /> },
-      { to: "/writing", label: "Writing", icon: <PenLine className="h-4 w-4" /> },
-      { to: "/speaking", label: "Speaking", icon: <Mic className="h-4 w-4" /> },
     ],
   },
   {

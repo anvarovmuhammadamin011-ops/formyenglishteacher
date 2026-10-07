@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download } from "lucide-react";
-import { api, downloadUrl } from "@/lib/api";
+import { api } from "@/lib/api";
+import { downloadCsv, stamp } from "@/lib/export";
 import type { TestResultsReport } from "@/lib/types";
 import {
   Avatar,
@@ -62,11 +63,32 @@ export default function TestResultsPage() {
               </option>
             ))}
           </Select>
-          <a href={downloadUrl(`/exports/tests/${id}/results.xlsx`)}>
-            <Button variant="outline" size="sm">
-              <Download className="h-3.5 w-3.5" /> Export XLSX
-            </Button>
-          </a>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              downloadCsv(
+                `results_${test.title}_${stamp()}`,
+                ["Student", "Username", "Group", "Score", "Total", "Percent", "Duration (s)", "Started", "Submitted", "Status", "Tab switches", "Refreshes"],
+                attempts.map((a) => [
+                  `${a.student.firstName} ${a.student.lastName}`,
+                  a.student.username,
+                  a.group?.name ?? "",
+                  a.score,
+                  a.totalPoints,
+                  a.percentage,
+                  a.durationSeconds ?? "",
+                  a.startedAt,
+                  a.submittedAt ?? "",
+                  a.status,
+                  a.tabSwitches,
+                  a.refreshCount,
+                ]),
+              )
+            }
+          >
+            <Download className="h-3.5 w-3.5" /> Export CSV
+          </Button>
         </div>
       </div>
 

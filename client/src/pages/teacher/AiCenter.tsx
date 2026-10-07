@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Sparkles, Wand2 } from "lucide-react";
@@ -185,7 +185,11 @@ export default function AiCenterPage() {
             </Button>
             {!cfg?.configured && (
               <p className="text-xs text-warning-600">
-                Add <code className="rounded bg-ink-100 px-1">AI_API_KEY=…</code> to <code className="rounded bg-ink-100 px-1">server/.env</code> and restart the API.
+                Add your DeepSeek API key in{" "}
+                <Link to="/settings" className="font-medium underline">
+                  Settings → AI
+                </Link>
+                .
               </p>
             )}
           </CardContent>

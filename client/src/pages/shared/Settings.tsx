@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Camera, KeyRound, Trash2, Upload } from "lucide-react";
+import { Camera, KeyRound, Sparkles, Trash2, Upload } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { chatRaw, getAiConfig, setAiConfig } from "@/lib/ai";
+import type { AiConfig } from "@/lib/types";
 import {
   Avatar,
   Badge,
@@ -17,6 +19,7 @@ import {
   Input,
   Label,
   PageHeader,
+  Select,
 } from "@/components/ui";
 import { LEVEL_LABEL, errorMessage, fmtDateTime } from "@/lib/utils";
 
@@ -25,6 +28,37 @@ export default function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [pwd, setPwd] = useState({ current: "", next: "", confirm: "" });
+  const [ai, setAi] = useState<AiConfig>(() => getAiConfig());
+  const [aiTesting, setAiTesting] = useState(false);
+
+  const saveAi = () => {
+    setAiConfig({
+      apiKey: ai.apiKey.trim(),
+      model: ai.model.trim() || "deepseek-chat",
+      baseUrl: ai.baseUrl.trim() || "https://api.deepseek.com/v1",
+      provider: "deepseek",
+    });
+    setAi(getAiConfig());
+    toast.success("AI settings saved");
+  };
+
+  const testAi = async () => {
+    setAiTesting(true);
+    try {
+      saveAi();
+      await chatRaw({
+        messages: [{ role: "user", content: "Reply with the single word OK" }],
+        requestType: "TEST",
+        maxTokens: 16,
+        json: false,
+      });
+      toast.success("AI is reachable");
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setAiTesting(false);
+    }
+  };
 
   const uploadAvatar = useMutation({
     mutationFn: (file: File) => {
@@ -176,6 +210,49 @@ export default function SettingsPage() {
             <p className="text-xs text-ink-400">Minimum 6 characters. You stay signed in after changing it.</p>
           </CardContent>
         </Card>
+
+        {user?.role === "TEACHER" && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-brand-600" /> AI (DeepSeek)
+              </CardTitle>
+              <Badge tone={ai.apiKey ? "green" : "gray"}>{ai.apiKey ? "configured" : "not set"}</Badge>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Field label="API key" hint="Saved only in this browser (localStorage).">
+                  <Input
+                    type="password"
+                    autoComplete="off"
+                    placeholder="sk-…"
+                    value={ai.apiKey}
+                    onChange={(e) => setAi({ ...ai, apiKey: e.target.value })}
+                  />
+                </Field>
+                <Field label="Model">
+                  <Select value={ai.model} onChange={(e) => setAi({ ...ai, model: e.target.value })}>
+                    <option value="deepseek-chat">deepseek-chat</option>
+                    <option value="deepseek-reasoner">deepseek-reasoner</option>
+                    <option value="gpt-4o-mini">gpt-4o-mini</option>
+                  </Select>
+                </Field>
+                <Field label="Base URL">
+                  <Input value={ai.baseUrl} onChange={(e) => setAi({ ...ai, baseUrl: e.target.value })} />
+                </Field>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={saveAi}>Save</Button>
+                <Button variant="outline" disabled={aiTesting || !ai.apiKey.trim()} onClick={() => void testAi()}>
+                  {aiTesting ? "Testing…" : "Test connection"}
+                </Button>
+              </div>
+              <p className="text-xs text-ink-400">
+                Get a key at platform.deepseek.com. Used by the AI Test Generator; the key never leaves this device.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <ConfirmDialog

@@ -131,11 +131,9 @@ export default function StudentDetailPage() {
             <CardContent className="flex flex-wrap gap-2">
               {student.groups.length === 0 && <p className="text-xs text-ink-500">Not in any group.</p>}
               {student.groups.map((g) => (
-                <Link key={g.id} to={`/groups/${g.id}`}>
-                  <Badge tone="indigo">
-                    {g.name} · {LEVEL_LABEL[g.level]}
-                  </Badge>
-                </Link>
+                <Badge key={g.id} tone="indigo">
+                  {g.name} · {LEVEL_LABEL[g.level]}
+                </Badge>
               ))}
             </CardContent>
           </Card>
